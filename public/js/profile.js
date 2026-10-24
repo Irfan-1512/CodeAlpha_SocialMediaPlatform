@@ -7,6 +7,14 @@ let profile;
 let me = null;
 let postsStarted = false;
 
+function paintFollow(p) {
+  const button = $('follow-btn');
+  button.hidden = p.is_me; // you cannot follow yourself
+  button.textContent = p.is_following ? 'Following' : 'Follow';
+  button.setAttribute('aria-pressed', String(p.is_following));
+  button.className = `btn ${p.is_following ? 'btn-secondary' : 'btn-primary'}`;
+}
+
 // All user text goes in through textContent, never innerHTML.
 function render(p) {
   profile = p;
@@ -20,6 +28,7 @@ function render(p) {
   $('c-followers').textContent = p.follower_count;
   $('c-following').textContent = p.following_count;
   $('edit-btn').hidden = !p.is_me;
+  paintFollow(p);
   $('status').hidden = true;
   $('profile').hidden = false;
 
@@ -58,6 +67,27 @@ async function load() {
     $('status').classList.add('error');
   }
 }
+
+$('follow-btn').addEventListener('click', async () => {
+  if (!me) {
+    location.href = '/login.html';
+    return;
+  }
+  const button = $('follow-btn');
+  button.disabled = true;
+  try {
+    const result = await api(`/users/${encodeURIComponent(profile.username)}/follow`, {
+      method: profile.is_following ? 'DELETE' : 'POST',
+    });
+    // Show the server's numbers, not a guess
+    profile = { ...profile, is_following: result.following, follower_count: result.follower_count };
+    $('c-followers').textContent = profile.follower_count;
+    paintFollow(profile);
+  } catch (err) {
+    alert(err.message);
+  }
+  button.disabled = false;
+});
 
 $('edit-btn').addEventListener('click', () => {
   $('edit-name').value = profile.name;

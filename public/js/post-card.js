@@ -102,8 +102,9 @@ export function postCard(post, { me, onDelete } = {}) {
 }
 
 // Loads posts into a list and wires the "Load more" button (cursor = id of the last post).
-export function initPostList({ list, more, status, params = {}, me }) {
+export function initPostList({ list, more, status, params = {}, me, empty = 'Nothing here yet.' }) {
   let before = null;
+  let active = true; // set to false by stop() so a slow old request cannot fill a new tab
 
   async function load() {
     more.disabled = true;
@@ -114,25 +115,31 @@ export function initPostList({ list, more, status, params = {}, me }) {
       const query = new URLSearchParams(params);
       if (before) query.set('before', before);
       const { posts, has_more } = await api(`/posts?${query}`);
+      if (!active) return;
       for (const post of posts) list.append(postCard(post, { me }));
       if (posts.length) before = posts[posts.length - 1].id;
       more.hidden = !has_more;
-      status.textContent = 'Nothing here yet.';
+      status.textContent = empty;
       status.hidden = list.children.length > 0;
     } catch (err) {
+      if (!active) return;
       status.className = 'status error';
       status.textContent = err.message;
     }
     more.disabled = false;
   }
 
-  more.addEventListener('click', load);
+  // onclick (not addEventListener) so restarting a list replaces the old handler
+  more.onclick = load;
   load();
 
   return {
     prepend(post) {
       list.prepend(postCard(post, { me }));
       status.hidden = true;
+    },
+    stop() {
+      active = false;
     },
   };
 }

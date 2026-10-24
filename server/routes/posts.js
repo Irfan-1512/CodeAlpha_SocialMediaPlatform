@@ -30,11 +30,12 @@ const shape = (row) => ({
 const getPost = (id, viewerId) => db.prepare(`${POST_SQL} WHERE p.id = ?`).get(viewerId, id);
 
 // GET /api/posts?feed=all&user=&before=&limit=
+// GET /api/posts?feed=all|following&user=&before=&limit=
 router.get('/', (req, res) => {
   const { feed, user, before, limit } = req.query;
   const isString = (v) => typeof v === 'string';
 
-  if (feed !== undefined && feed !== 'all') {
+  if (feed !== undefined && feed !== 'all' && feed !== 'following') {
     return res.status(400).json({ error: 'Invalid feed' });
   }
   if (before !== undefined && !(isString(before) && DIGITS.test(before))) {
@@ -46,9 +47,16 @@ router.get('/', (req, res) => {
   const pageSize = limit === undefined ? 20 : Number(limit);
 
   const viewer = readUser(req);
+  if (feed === 'following' && !viewer) return res.status(401).json({ error: 'Please log in' });
+
   const where = [];
   const params = [viewer ? viewer.id : 0];
 
+  if (feed === 'following') {
+    // Own posts plus posts from the people the viewer follows
+    where.push('(p.user_id = ? OR p.user_id IN (SELECT following_id FROM follows WHERE follower_id = ?))');
+    params.push(viewer.id, viewer.id);
+  }
   if (user !== undefined) {
     const username = isString(user) ? user.toLowerCase() : '';
     const author = USERNAME_PATTERN.test(username)
@@ -69,7 +77,6 @@ router.get('/', (req, res) => {
 
   res.json({ posts: rows.slice(0, pageSize).map(shape), has_more: rows.length > pageSize });
 });
-
 // POST /api/posts
 router.post('/', writeLimiter, requireAuth, (req, res) => {
   const { content } = req.body || {};

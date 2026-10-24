@@ -23,7 +23,10 @@
     </form>
     <p id="invite" class="muted" hidden><a href="/login.html">Log in</a> to share a post.</p>
 
-    <h2>Latest posts</h2>
+        <div id="tabs" class="tabs" role="tablist" aria-label="Feed" hidden>
+      <button id="tab-all" class="tab" role="tab" type="button" data-feed="all" aria-selected="true" tabindex="0">All</button>
+      <button id="tab-following" class="tab" role="tab" type="button" data-feed="following" aria-selected="false" tabindex="-1">Following</button>
+    </div>
     <p id="status" class="status" role="status">Loading posts...</p>
     <ul id="posts" class="post-list"></ul>
     <button id="more" class="btn btn-secondary" type="button" hidden>Load more</button>

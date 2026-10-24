@@ -15,6 +15,23 @@ const PROFILE_SQL = `
     (SELECT COUNT(*) FROM follows WHERE following_id = u.id) AS follower_count,
     (SELECT COUNT(*) FROM follows WHERE follower_id = u.id) AS following_count
   FROM users u WHERE u.username = ?`;
+// GET /api/users?q=: search by username or name (up to 10 results)
+router.get('/', (req, res) => {
+  const text = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (text.length < 1 || text.length > 50) {
+    return res.status(400).json({ error: 'Search text must be 1 to 50 characters' });
+  }
+  // Escape LIKE wildcards so a typed % or _ is matched literally
+  const pattern = `%${text.replace(/[\\%_]/g, '\\$&')}%`;
+  const rows = db
+    .prepare(
+      `SELECT id, username, name, bio FROM users
+       WHERE username LIKE ? ESCAPE '\\' OR name LIKE ? ESCAPE '\\'
+       ORDER BY username LIMIT 10`
+    )
+    .all(pattern, pattern);
+  res.json(rows);
+});
 
 // GET /api/users/:username
 router.get('/:username', (req, res) => {
@@ -52,5 +69,25 @@ router.patch('/me', writeLimiter, requireAuth, (req, res) => {
   );
   res.json(db.prepare('SELECT name, bio FROM users WHERE id = ?').get(req.user.id));
 });
+// POST and DELETE /api/users/:username/follow: both are safe to repeat
+function setFollow(following) {
+  return (req, res) => {
+    const username = req.params.username.toLowerCase();
+    const target = USERNAME_PATTERN.test(username)
+      && db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+    if (!target) return res.status(404).json({ error: 'User not found' });
+    if (target.id === req.user.id) return res.status(400).json({ error: 'You cannot follow yourself' });
+
+    if (following) {
+      db.prepare('INSERT OR IGNORE INTO follows (follower_id, following_id) VALUES (?, ?)').run(req.user.id, target.id);
+    } else {
+      db.prepare('DELETE FROM follows WHERE follower_id = ? AND following_id = ?').run(req.user.id, target.id);
+    }
+    const { n } = db.prepare('SELECT COUNT(*) AS n FROM follows WHERE following_id = ?').get(target.id);
+    res.json({ following, follower_count: n });
+  };
+}
+router.post('/:username/follow', writeLimiter, requireAuth, setFollow(true));
+router.delete('/:username/follow', writeLimiter, requireAuth, setFollow(false));
 
 module.exports = router;
