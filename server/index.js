@@ -15,6 +15,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/posts', require('./routes/posts'));
+app.use('/api/comments', require('./routes/comments'));
 // Unknown API paths get a JSON 404.
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 // Routes are added phase by phase; unknown API paths get a JSON 404.

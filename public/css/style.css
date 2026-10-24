@@ -406,3 +406,32 @@ h2 {
   color: var(--error);
   font-size: 14px;
 }
+/* Comments and post page */
+.back {
+  display: inline-block;
+  margin-bottom: 16px;
+}
+.comment-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+}
+.comment-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.comment {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.comment .btn-delete {
+  margin-top: 4px;
+}

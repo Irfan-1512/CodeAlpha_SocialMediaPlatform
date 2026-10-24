@@ -1,10 +1,10 @@
 import { api } from './api.js';
 import { avatar } from './avatar.js';
 
-const when = (sqlDate) => new Date(sqlDate.replace(' ', 'T') + 'Z');
+export const when = (sqlDate) => new Date(sqlDate.replace(' ', 'T') + 'Z');
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-function el(tag, className, text) {
+export function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text; // user text always via textContent
@@ -60,7 +60,7 @@ function likeButton(post, me) {
   return wrap;
 }
 
-export function postCard(post, { me } = {}) {
+export function postCard(post, { me, onDelete } = {}) {
   const author = post.author;
   const li = el('li', 'post');
 
@@ -71,8 +71,11 @@ export function postCard(post, { me } = {}) {
   const time = el('time', 'muted', when(post.created_at).toLocaleString());
   time.dateTime = when(post.created_at).toISOString();
 
+  const comments = el('a', 'comment-link', plural(post.comment_count, 'comment'));
+  comments.href = `/post.html?id=${post.id}`;
+
   const actions = el('div', 'post-actions');
-  actions.append(likeButton(post, me), el('span', 'muted', plural(post.comment_count, 'comment')));
+  actions.append(likeButton(post, me), comments);
 
   if (me && me.id === author.id) {
     const del = el('button', 'btn btn-secondary btn-delete', 'Delete');
@@ -83,6 +86,7 @@ export function postCard(post, { me } = {}) {
       try {
         await api(`/posts/${post.id}`, { method: 'DELETE' });
         li.remove();
+        if (onDelete) onDelete();
       } catch (err) {
         del.disabled = false;
         alert(err.message);

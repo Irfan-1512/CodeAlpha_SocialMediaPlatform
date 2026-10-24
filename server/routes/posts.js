@@ -117,4 +117,41 @@ function setLike(liked) {
 }
 router.post('/:id/like', writeLimiter, requireAuth, setLike(true));
 router.delete('/:id/like', writeLimiter, requireAuth, setLike(false));
+// Comments on a post. Oldest first, so a conversation reads top to bottom.
+const COMMENT_SQL = `
+  SELECT c.id, c.content, c.created_at, u.id AS author_id, u.username, u.name
+  FROM comments c JOIN users u ON u.id = c.user_id`;
+
+const shapeComment = (row) => ({
+  id: row.id,
+  content: row.content,
+  created_at: row.created_at,
+  author: { id: row.author_id, username: row.username, name: row.name },
+});
+
+const postExists = (id) => db.prepare('SELECT 1 FROM posts WHERE id = ?').get(id);
+
+// GET /api/posts/:id/comments
+router.get('/:id/comments', (req, res) => {
+  const id = DIGITS.test(req.params.id) ? Number(req.params.id) : 0;
+  if (!postExists(id)) return res.status(404).json({ error: 'Post not found' });
+  const rows = db.prepare(`${COMMENT_SQL} WHERE c.post_id = ? ORDER BY c.id`).all(id);
+  res.json(rows.map(shapeComment));
+});
+
+// POST /api/posts/:id/comments
+router.post('/:id/comments', writeLimiter, requireAuth, (req, res) => {
+  const id = DIGITS.test(req.params.id) ? Number(req.params.id) : 0;
+  const { content } = req.body || {};
+  const text = typeof content === 'string' ? content.trim() : '';
+  if (text.length < 1 || text.length > 200) {
+    return res.status(400).json({ error: 'Comment must be 1 to 200 characters' });
+  }
+  if (!postExists(id)) return res.status(404).json({ error: 'Post not found' });
+  const info = db
+    .prepare('INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)')
+    .run(id, req.user.id, text);
+  res.status(201).json(shapeComment(db.prepare(`${COMMENT_SQL} WHERE c.id = ?`).get(info.lastInsertRowid)));
+});
+
 module.exports = router;
