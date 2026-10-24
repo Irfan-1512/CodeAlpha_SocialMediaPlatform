@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profile | MoonCircle</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header" id="site-header"></header>
+  <main id="main" class="container">
+    <p id="status" class="status" role="status">Loading profile...</p>
+    <section id="profile" hidden>
+      <div class="profile-head">
+        <div id="p-avatar"></div>
+        <div>
+          <h1 id="p-name"></h1>
+          <p class="muted" id="p-handle"></p>
+        </div>
+      </div>
+      <p id="p-bio"></p>
+      <p class="muted" id="p-joined"></p>
+      <ul class="counts" aria-label="Profile counts">
+        <li><strong id="c-posts"></strong> Posts</li>
+        <li><strong id="c-followers"></strong> Followers</li>
+        <li><strong id="c-following"></strong> Following</li>
+      </ul>
+      <button id="edit-btn" class="btn btn-secondary" type="button" hidden>Edit profile</button>
+      <form id="edit-form" class="auth-card" hidden>
+        <div class="field">
+          <label for="edit-name">Name</label>
+          <input id="edit-name" type="text" required minlength="2" maxlength="50">
+        </div>
+        <div class="field">
+          <label for="edit-bio">Bio (up to 160 characters)</label>
+          <textarea id="edit-bio" rows="3" maxlength="160"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Save</button>
+        <p id="edit-notice" class="notice" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script type="module" src="/js/layout.js"></script>
+  <script type="module" src="/js/profile.js"></script>
+</body>
+</html>

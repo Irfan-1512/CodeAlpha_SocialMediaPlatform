@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in | MoonCircle</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header" id="site-header"></header>
+  <main id="main" class="container">
+    <div class="auth-card">
+      <h1 id="auth-title">Log in</h1>
+      <form id="auth-form">
+        <div class="field" data-register hidden>
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" minlength="2" maxlength="50" autocomplete="name">
+        </div>
+        <div class="field" data-register hidden>
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" pattern="[a-zA-Z0-9_]{3,20}"
+                 title="3 to 20 letters, digits or underscores" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required maxlength="254" autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" required minlength="8" maxlength="72">
+        </div>
+        <button id="auth-submit" class="btn btn-primary" type="submit">Log in</button>
+        <p id="auth-notice" class="notice" role="status" aria-live="polite"></p>
+      </form>
+      <p class="switch"><span id="switch-text">New here?</span>
+        <button id="switch-btn" class="link-btn" type="button">Create an account</button></p>
+    </div>
+  </main>
+  <footer class="site-footer" id="site-footer"></footer>
+  <script type="module" src="/js/layout.js"></script>
+  <script type="module" src="/js/auth-page.js"></script>
+</body>
+</html>
