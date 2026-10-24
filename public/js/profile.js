@@ -1,8 +1,11 @@
 import { api } from './api.js';
 import { avatar } from './avatar.js';
+import { initPostList } from './post-card.js';
 
 const $ = (id) => document.getElementById(id);
 let profile;
+let me = null;
+let postsStarted = false;
 
 // All user text goes in through textContent, never innerHTML.
 function render(p) {
@@ -19,19 +22,35 @@ function render(p) {
   $('edit-btn').hidden = !p.is_me;
   $('status').hidden = true;
   $('profile').hidden = false;
+
+  // The list is started once, even if the profile is re-rendered after an edit.
+  if (!postsStarted) {
+    postsStarted = true;
+    initPostList({
+      list: $('posts'),
+      more: $('more'),
+      status: $('posts-status'),
+      params: { user: p.username },
+      me,
+    });
+  }
 }
 
 async function load() {
   try {
+    try {
+      me = (await api('/auth/me')).user;
+    } catch {
+      me = null;
+    }
     let username = new URLSearchParams(location.search).get('user');
     if (!username) {
       // No ?user= means "my own profile"
-      const { user } = await api('/auth/me');
-      if (!user) {
+      if (!me) {
         location.href = '/login.html';
         return;
       }
-      username = user.username;
+      username = me.username;
     }
     render(await api(`/users/${encodeURIComponent(username)}`));
   } catch (err) {

@@ -298,3 +298,81 @@ textarea {
   max-width: none;
   margin-top: 16px;
 }
+/* Composer and posts */
+h2 {
+  margin: 24px 0 12px;
+  font-size: 20px;
+}
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.composer[hidden] {
+  display: none;
+}
+.composer textarea {
+  width: 100%;
+}
+.composer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.post-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.post {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: background 0.15s;
+}
+.post:hover {
+  background: var(--glass-strong);
+}
+.post-body {
+  flex: 1;
+  min-width: 0;
+}
+.post-author {
+  color: var(--text);
+  text-decoration: none;
+}
+.post-body time {
+  margin-left: 8px;
+  font-size: 14px;
+}
+.post-text {
+  margin: 4px 0 8px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+}
+.btn-delete {
+  margin-left: auto;
+  color: var(--error);
+}
