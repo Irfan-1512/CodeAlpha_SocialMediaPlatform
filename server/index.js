@@ -23,6 +23,8 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 
 // One central error handler: log on the server, never leak details to clients.
 app.use((err, req, res, next) => {
+  // Malformed JSON is the client's mistake: short message, no log noise
+  if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid JSON' });
   console.error(err);
   res.status(err.status || 500).json({ error: err.status ? err.message : 'Server error' });
 });
