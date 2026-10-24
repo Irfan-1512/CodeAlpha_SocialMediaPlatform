@@ -11,6 +11,55 @@ function el(tag, className, text) {
   return node;
 }
 
+// Heart button: updates at once, then shows the server's numbers, or reverts on failure.
+function likeButton(post, me) {
+  const button = el('button', 'like-btn');
+  button.type = 'button';
+  button.setAttribute('aria-label', `Like post by ${post.author.name}`);
+  const message = el('span', 'sr-only');
+  message.setAttribute('aria-live', 'polite');
+
+  let liked = post.liked_by_me;
+  let count = post.like_count;
+
+  function paint() {
+    button.setAttribute('aria-pressed', String(liked));
+    button.classList.toggle('liked', liked);
+    // The shape changes too (filled vs outline), so state is never shown by colour alone.
+    button.textContent = `${liked ? '\u2665' : '\u2661'} ${count}`;
+  }
+  paint();
+
+  button.addEventListener('click', async () => {
+    if (!me) {
+      location.href = '/login.html';
+      return;
+    }
+    const before = { liked, count };
+    liked = !liked;
+    count += liked ? 1 : -1;
+    paint();
+    button.disabled = true;
+    try {
+      const result = await api(`/posts/${post.id}/like`, { method: liked ? 'POST' : 'DELETE' });
+      liked = result.liked_by_me;
+      count = result.like_count;
+      message.className = 'sr-only';
+      message.textContent = liked ? 'Liked' : 'Unliked';
+    } catch (err) {
+      ({ liked, count } = before);
+      message.className = 'like-error';
+      message.textContent = err.message;
+    }
+    paint();
+    button.disabled = false;
+  });
+
+  const wrap = el('span', 'like-wrap');
+  wrap.append(button, message);
+  return wrap;
+}
+
 export function postCard(post, { me } = {}) {
   const author = post.author;
   const li = el('li', 'post');
@@ -23,10 +72,7 @@ export function postCard(post, { me } = {}) {
   time.dateTime = when(post.created_at).toISOString();
 
   const actions = el('div', 'post-actions');
-  actions.append(
-    el('span', 'muted', plural(post.like_count, 'like')),
-    el('span', 'muted', plural(post.comment_count, 'comment'))
-  );
+  actions.append(likeButton(post, me), el('span', 'muted', plural(post.comment_count, 'comment')));
 
   if (me && me.id === author.id) {
     const del = el('button', 'btn btn-secondary btn-delete', 'Delete');

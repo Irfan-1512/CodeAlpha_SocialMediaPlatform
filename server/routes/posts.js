@@ -101,5 +101,20 @@ router.delete('/:id', writeLimiter, requireAuth, (req, res) => {
   db.prepare('DELETE FROM posts WHERE id = ? AND user_id = ?').run(Number(req.params.id), req.user.id);
   res.json({ ok: true });
 });
-
+// POST and DELETE /api/posts/:id/like: both are safe to repeat
+function setLike(liked) {
+  return (req, res) => {
+    const id = DIGITS.test(req.params.id) ? Number(req.params.id) : 0;
+    if (!db.prepare('SELECT 1 FROM posts WHERE id = ?').get(id)) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    // INSERT OR IGNORE and a plain DELETE change nothing when repeated
+    if (liked) db.prepare('INSERT OR IGNORE INTO likes (user_id, post_id) VALUES (?, ?)').run(req.user.id, id);
+    else db.prepare('DELETE FROM likes WHERE user_id = ? AND post_id = ?').run(req.user.id, id);
+    const { n } = db.prepare('SELECT COUNT(*) AS n FROM likes WHERE post_id = ?').get(id);
+    res.json({ liked_by_me: liked, like_count: n });
+  };
+}
+router.post('/:id/like', writeLimiter, requireAuth, setLike(true));
+router.delete('/:id/like', writeLimiter, requireAuth, setLike(false));
 module.exports = router;
